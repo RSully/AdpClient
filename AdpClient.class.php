@@ -1,11 +1,5 @@
 <?php
-function logit() {
-	$date = time();
-
-	$args = func_get_args();
-	$args[0] = sprintf("[%s] %s\n", $date, $args[0] ?: '(Empty)');
-	call_user_func_array('printf', $args);
-}
+require_once __DIR__ . '/AdpClient.function.php';
 
 class AdpClient {
 	private $endpoint = '';
@@ -35,6 +29,10 @@ class AdpClient {
 		$this->authenticate($user, $pass);
 	}
 
+	/**
+	 * Helpers for building & parsing requests
+	 */
+
 	private function getHeaders($headers)
 	{
 		return array_merge(array(
@@ -43,8 +41,13 @@ class AdpClient {
 	}
 	private function getTrimJsChars()
 	{
+		// Besides the default we need `'` and `;`
 		return "\t\n\r\0\x0B';";
 	}
+
+	/**
+	 * Helpers for dealing with cURL
+	 */
 
 	private function setupRequest($isPost = false, $apiPoint = '')
 	{
@@ -77,9 +80,15 @@ class AdpClient {
 		return array($info, $response);
 	}
 
+	/**
+	 * Authenticate
+	 * 
+	 * Begin the session and get cookies for subsequent requests
+	 */
+
 	private function authenticate($user, $pass)
 	{
-		logit('authenticate');
+		AdpClientLog('authenticate');
 
 		$this->setupRequest(true, '/siteminderagent/forms/login.fcc');
 		$this->setPostData(array(
@@ -91,9 +100,17 @@ class AdpClient {
 		$res = $this->fetchRequest();
 	}
 
+	/**
+	 * MyTime
+	 * 
+	 * Main page for any/all timeclock requests
+	 * We need the custID and empID from this page
+	 * We also used this to reverse-engineer the POSTs
+	 */
+
 	private function cacheMytime()
 	{
-		logit('cacheMytime');
+		AdpClientLog('cacheMytime');
 
 		$this->setupRequest(true, '/ezLaborManagerNet/UI4/WFN/Portlet/MyTime.aspx');
 		$res = $this->fetchRequest();
@@ -125,10 +142,8 @@ class AdpClient {
 
 	public function getActivityJournal($strip = true)
 	{
-		logit('getTimesheet');
-
+		AdpClientLog('getTimesheet');
 		$mytime = $this->cacheMytime();
-		// print_r($mytime);
 
 		$this->setupRequest(true, '/ezLaborManagerNet/UI4/Common/TLMRevitServices.asmx/GetActivityJournal');
 		$this->setPostData($mytime['extra'], true);
@@ -156,8 +171,7 @@ class AdpClient {
 
 	public function sendClock($action)
 	{
-		logit('sendClock %s', $action);
-
+		AdpClientLog('sendClock %s', $action);
 		$mytime = $this->cacheMytime();
 
 		$this->setupRequest(true, '/ezLaborManagerNet/UI4/Common/TLMRevitServices.asmx/ProcessClockFunctionAndReturnMsg');
@@ -167,6 +181,7 @@ class AdpClient {
 		)));
 
 		$res = $this->fetchRequest();
+		// Debugging because we haven't seen a response yet
 		print_r($res);
 		var_dump($res[1]);
 	}
