@@ -177,7 +177,7 @@ class AdpClient {
 
 		foreach ($dom->find('tr') as $row) {
 			$action = $row->find('td', 0)->plaintext;
-			$time = new DateTime($row->find('td', 1)->plaintext);
+			$time = $row->find('td', 1)->plaintext;
 			$entries[] = array($action, $time);
 		}
 		return $entries;
