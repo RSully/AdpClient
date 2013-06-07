@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/AdpClient.function.php';
+require_once __DIR__ . '/simple_html_dom.php';
 
 class AdpClient {
 	private $endpoint = '';
@@ -140,7 +141,7 @@ class AdpClient {
 	 * Allows you to retreive punches for today
 	 */
 
-	public function getActivityJournal($strip = true)
+	public function fetchActivityJournal($strip = true)
 	{
 		AdpClientLog('getTimesheet');
 		$mytime = $this->cacheMytime();
@@ -161,6 +162,25 @@ class AdpClient {
 
 		$data = utf8_decode($data['d']);
 		return $data;
+	}
+	public function getActivityJournal($getHtml = false)
+	{
+		$journal = $this->fetchActivityJournal();
+		if ($journal === false || $getHtml) {
+			return $journal;
+		}
+
+		// Parse the journal
+		
+		$dom = str_get_html($journal);
+		$entries = array();
+
+		foreach ($dom->find('tr') as $row) {
+			$action = $row->find('td', 0)->plaintext;
+			$time = new DateTime($row->find('td', 1)->plaintext);
+			$entries[] = array($action, $time);
+		}
+		return $entries;
 	}
 
 	/**
