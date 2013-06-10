@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/AdpClient.class.php';
+require_once __DIR__ . '/include/AdpClient.class.php';
 date_default_timezone_set('America/New_York');
 
 function handleInit()
