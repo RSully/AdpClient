@@ -198,7 +198,7 @@ class AdpClient {
 		$this->setPostData(array_merge($mytime['extra'], array(
 			'sCulture' => 'en-US',
 			'sEvent' => $action
-		)));
+		)), true);
 
 		$res = $this->fetchRequest();
 		// Debugging because we haven't seen a response yet
