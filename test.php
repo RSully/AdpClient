@@ -21,7 +21,7 @@ function handleInit()
 		}
 	}
 
-	$adp = new AdpClient($auth[0], $auth[1], $opts);
+	$adp = new AdpClient($auth[0], $auth[1], __DIR__ . '/data', $opts);
 }
 
 function handleCommand()
