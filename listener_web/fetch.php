@@ -4,9 +4,11 @@ require_once __DIR__ . '/../include/ListenerWebQueue.class.php';
 
 $queue = ListenerWebQueue::shared();
 
-$queue->lock();
+if (($queue->lock())) {
+	echo $queue->read();
+	$queue->empty();
 
-echo $queue->read();
-$queue->empty();
-
-$queue->unlock();
+	$queue->unlock();
+} else {
+	echo json_encode(false);
+}

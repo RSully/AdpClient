@@ -14,11 +14,17 @@ class ListenerWebQueue {
 	 * Lock operations
 	 */
 
-	public function lock()
+	public function lock($wait = 10, $interval = 0.1)
 	{
+		$iteration = 0;
 		while (FileHelper::exists($this->lockPath)) {
+			if ((++$iteration * $interval) >= $wait) {
+				$this->locked = false;
+				return $this->locked;
+			}
+
 			// Sleep for 0.1 seconds
-			usleep(1000000 * 0.1);
+			usleep(1000000 * $interval);
 		}
 		$this->locked = FileHelper::touch($this->lockPath);
 		return $this->locked;
@@ -33,19 +39,26 @@ class ListenerWebQueue {
 	 * IO operations
 	 */
 
-	public function read()
+	private function read()
 	{
 		if (!$this->locked) return false;
-		return file_get_contents($this->queuePath);
+		return FileHelper::read($this->queuePath);
 	}
-	public function write($data)
+	private function write($data)
 	{
 		if (!$this->locked) return false;
-		return file_put_contents($this->queuePath, $data);
+		return FileHelper::write($this->queuePath, $data);
 	}
-	public function append($data)
+
+	/**
+	 * Queue operations
+	 */
+
+	public function append($item)
 	{
-		return $this->write($this->read() . $data);
+		$json = json_decode($this->read(), true);
+		$json[] = $item;
+		return $this->write(json_encode($json));
 	}
 	public function empty()
 	{

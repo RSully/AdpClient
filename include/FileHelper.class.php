@@ -17,6 +17,17 @@ class FileHelper {
 		return unlink($path);
 	}
 
+	public static function read($path)
+	{
+		self::clear($path);
+		return file_get_contents($path);
+	}
+	public static function write($path, $data)
+	{
+		self::clear($path);
+		return file_put_contents($path, $data);
+	}
+
 	public static function clear($path)
 	{
 		return clearstatcache(true, $path);
