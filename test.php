@@ -6,7 +6,7 @@ function handleInit()
 {
 	global $adp;
 
-	$authData = explode("\n", file_get_contents(__DIR__ . '/auth'));
+	$authData = explode("\n", file_get_contents(__DIR__ . '/test-auth'));
 	$auth = explode('::', array_shift($authData));
 
 	$opts = array();
