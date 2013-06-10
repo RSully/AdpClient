@@ -5,6 +5,7 @@ require_once __DIR__ . '/simple_html_dom.php';
 class AdpClient {
 	private $endpoint = '';
 	private $ch = null;
+	private $cachedExtra = array();
 
 	function __construct($user, $pass, $data_dir = __DIR__, $extraOpts = array(), $endpoint = 'https://workforcenow.adp.com') {
 		$this->endpoint = $endpoint;
@@ -109,9 +110,14 @@ class AdpClient {
 	 * We also used this to reverse-engineer the POSTs
 	 */
 
-	private function cacheMytime()
+	private function cacheMytime($forced = false)
 	{
 		AdpClientLog('cacheMytime');
+		if (!$forced && count($this->cachedExtra)) {
+			AdpClientLog('returning cached');
+			return $this->cachedExtra;
+		}
+
 
 		$this->setupRequest(true, '/ezLaborManagerNet/UI4/WFN/Portlet/MyTime.aspx');
 		$res = $this->fetchRequest();
@@ -126,13 +132,15 @@ class AdpClient {
 			$findRes[] = trim(substr($resData, $pos, $end), $this->getTrimJsChars());
 		}
 
-		return array(
+		$this->cachedExtra = array(
 			'res' => $res,
 			'extra' => array(
 				'sEmployeeID' => $findRes[1],
 				'iCustID' => $findRes[0]
 			)
 		);
+
+		return $this->cachedExtra;
 	}
 
 	/**
