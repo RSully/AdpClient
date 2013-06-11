@@ -34,7 +34,7 @@
 				<td>Action</td>
 				<td>
 					<select id="clock_action">
-						<?php foreach (AdpClient::get() as $val => $label): ?>
+						<?php foreach (AdpClient::getSendClockActions() as $val => $label): ?>
 							<option value="<?=$val?>"><?=$label?></option>
 						<?php endforeach; ?>
 					</select>
