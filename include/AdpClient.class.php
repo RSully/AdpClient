@@ -168,8 +168,7 @@ class AdpClient {
 			return false;
 		}
 
-		$data = utf8_decode($data['d']);
-		return $data;
+		return utf8_decode($data['d']);
 	}
 	public function getActivityJournal($getHtml = false)
 	{
@@ -209,9 +208,12 @@ class AdpClient {
 		)), true);
 
 		$res = $this->fetchRequest();
-		// Debugging because we haven't seen a response yet
-		print_r($res);
-		var_dump($res[1]);
+		$data = $res[1];
+
+		$data_pipe = explode('|', $data);
+		$success = array_shift($data_pipe) == 'True';
+
+		return array($success, utf8_decode(implode('|', $data_pipe)));
 	}
 	public function getSendClockActions()
 	{
