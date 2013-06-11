@@ -158,7 +158,7 @@ class AdpClient {
 		$this->setPostData($mytime['extra'], true);
 
 		$res = $this->fetchRequest();
-		
+
 		// Get data with the right element/etc
 		if (!isset($res[1])) {
 			return false;
@@ -178,7 +178,7 @@ class AdpClient {
 		}
 
 		// Parse the journal
-		
+
 		$dom = str_get_html($journal);
 		$entries = array();
 
@@ -211,7 +211,7 @@ class AdpClient {
 		$data = $res[1];
 
 		$data_pipe = explode('|', $data);
-		$success = array_shift($data_pipe) == 'True';
+		$success = strtolower(array_shift($data_pipe)) == 'true';
 
 		return array($success, utf8_decode(implode('|', $data_pipe)));
 	}
