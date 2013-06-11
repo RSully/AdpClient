@@ -215,7 +215,12 @@ class AdpClient {
 
 		return array($success, utf8_decode(implode('|', $data_pipe)));
 	}
-	public function getSendClockActions()
+
+	/**
+	 * Static helpers
+	 */
+
+	public static function getSendClockActions()
 	{
 		return array(
 			// value => label
