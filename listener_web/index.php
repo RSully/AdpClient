@@ -1,5 +1,8 @@
 <?php
 // File that adds to the queue
+
+// Used for getting actions to render
+require_once __DIR__ . '/../include/AdpClient.class.php';
 ?>
 <!DOCTYPE html>
 <html>
