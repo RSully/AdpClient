@@ -3,6 +3,7 @@
 
 // Used for getting actions to render
 require_once __DIR__ . '/../include/AdpClient.class.php';
+require_once __DIR__ . '/../include/PageHelper.class.php';
 ?>
 <!DOCTYPE html>
 <html>
@@ -14,40 +15,15 @@ require_once __DIR__ . '/../include/AdpClient.class.php';
 <body>
 	<h1>ADP Clock System</h1>
 
-	<div id="login">
-		<table>
-			<tr>
-				<td>Username</td>
-				<td><input type="text" id="login_username"></td>
-			</tr>
-			<tr>
-				<td>Password</td>
-				<td><input type="password" id="login_password"></td>
-			</tr>
-			<tr>
-				<td></td>
-				<td><button type="button">Login</button></td>
-			</tr>
-		</table>
-	</div>
+	<div id="page">
+		<?php
+		$page = $_GET['page'];
+		if (!isset($page) || !PageHelper::exists($page)) {
+			$page = 'clock';
+		}
 
-	<div id="clocker">
-		<table>
-			<tr>
-				<td>Action</td>
-				<td>
-					<select id="clock_action">
-						<?php foreach (AdpClient::getSendClockActions() as $val => $label): ?>
-							<option value="<?=$val?>"><?=$label?></option>
-						<?php endforeach; ?>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<td></td>
-				<td><button type="button">Go</button></td>
-			</tr>
-		</table>
+		include PageHelper::path($page);
+		?>
 	</div>
 </body>
 </html>
