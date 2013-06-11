@@ -17,7 +17,7 @@ require_once __DIR__ . '/../include/PageHelper.class.php';
 
 	<div id="page">
 		<?php
-		$page = $_GET['page'];
+		$page = $_GET['p'];
 		if (!isset($page) || !PageHelper::exists($page)) {
 			$page = 'clock';
 		}
