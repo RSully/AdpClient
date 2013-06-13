@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/AdpClient.function.php';
 require_once __DIR__ . '/simple_html_dom.php';
+require_once __DIR__ . '/j4p5/js.php';
 
 class AdpClient {
 	private $endpoint = '';
@@ -41,10 +42,10 @@ class AdpClient {
 			'Origin: ' . $this->endpoint
 		), $headers);
 	}
-	private function getTrimJsChars()
+	private function getTrimJsChars($extra = '')
 	{
 		// Besides the default we need `'` and `;`
-		return "\t\n\r\0\x0B';";
+		return " \t\n\r\0\x0B" . $extra;
 	}
 
 	/**
@@ -129,7 +130,7 @@ class AdpClient {
 		foreach ($find as $findme) {
 			$pos = strpos($resData, $findme) + strlen($findme);
 			$end = strpos($resData, "\n", $pos) - $pos;
-			$findRes[] = trim(substr($resData, $pos, $end), $this->getTrimJsChars());
+			$findRes[] = trim(substr($resData, $pos, $end), $this->getTrimJsChars("';"));
 		}
 
 		$this->cachedExtra = array(
@@ -151,7 +152,7 @@ class AdpClient {
 
 	public function fetchActivityJournal($strip = true)
 	{
-		AdpClientLog('getTimesheet');
+		AdpClientLog('fetchActivityJournal');
 		$mytime = $this->cacheMytime();
 
 		$this->setupRequest(true, '/ezLaborManagerNet/UI4/Common/TLMRevitServices.asmx/GetActivityJournal');
@@ -188,6 +189,55 @@ class AdpClient {
 			$entries[] = array($action, $time);
 		}
 		return $entries;
+	}
+
+	private function fetchTimecardPage()
+	{
+		AdpClientLog('fetchTimecardPage');
+
+		$this->setupRequest(false, '/ezLaborManagerNet/iFrameRedir.aspx?pg=122');
+		$res = $this->fetchRequest();
+
+		// Get data with the right element/etc
+		if (!isset($res[1])) {
+			return false;
+		}
+		return $res[1];
+	}
+	public function getTimecard($getHtml = false)
+	{
+		// HTML lines with TCMS.oTD.push
+		$html = $this->fetchTimecardPage();
+		if ($getHtml || $html === false) {
+			return $html;
+		}
+
+		// We're going to be parsing the JS
+		$objs = array();
+		$addObj = function($input) use(&$objs) {
+			$objs[] = js_to_php_array($input);
+		};
+		js::define('external', array(
+			'addObj' => $addObj
+		));
+
+
+		foreach (explode("\n", $html) as $line) {
+			$line = trim($line);
+			if (has_prefix('TCMS.oTD.push', $line)) {
+				$line = str_replace('TCMS.oTD.push', '', $line); // Get rid of function call
+				$line = strip_tags($line); // Get rid of ending </script>
+
+				$line = 'external.addObj' . $line . ';';
+				echo "Running JS:\n\t" . $line . "\n";
+				js::run($line);
+			}
+		}
+		
+		array_walk_recursive($objs, function(&$a){
+			$a = is_string($a) ? urldecode($a) : $a;
+		});
+		return $objs;
 	}
 
 	/**
