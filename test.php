@@ -38,6 +38,8 @@ function handleCommand()
 	} else if ($argv[1] == 'journal') {
 		// shows by default
 		$res = 'Timesheet below';
+	} else if ($argv[1] == 'timecard') {
+		$res = $adp->getTimecard();
 	}
 
 	return $res;
