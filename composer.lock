@@ -3,20 +3,20 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "b7a0f6c549e72d44d4eea7b34721ab3f",
+    "hash": "b8b5fd4407efd8efda6a0631334240df",
     "packages": [
         {
             "name": "jlogsdon/cli",
-            "version": "v0.9.2",
+            "version": "v0.9.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jlogsdon/php-cli-tools.git",
-                "reference": "v0.9.2"
+                "reference": "v0.9.3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jlogsdon/php-cli-tools/zipball/v0.9.2",
-                "reference": "v0.9.2",
+                "url": "https://api.github.com/repos/jlogsdon/php-cli-tools/zipball/v0.9.3",
+                "reference": "v0.9.3",
                 "shasum": ""
             },
             "require": {
@@ -26,7 +26,10 @@
             "autoload": {
                 "psr-0": {
                     "cli": "lib/"
-                }
+                },
+                "files": [
+                    "lib/cli/cli.php"
+                ]
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -45,7 +48,7 @@
                 "cli",
                 "console"
             ],
-            "time": "2013-06-11 22:10:34"
+            "time": "2013-06-14 16:35:34"
         }
     ],
     "packages-dev": [

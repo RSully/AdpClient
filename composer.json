@@ -15,7 +15,6 @@
             "vendor_other/j4p5/"
         ],
         "files": [
-            "vendor/jlogsdon/cli/lib/cli/cli.php",
             "include/AdpClient.function.php"
         ]
     }
