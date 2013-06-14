@@ -1,6 +1,5 @@
 <?php
-require_once __DIR__ . '/include/AdpClient.class.php';
-date_default_timezone_set('America/New_York');
+require_once __DIR__ . '/include.php';
 
 function handleInit()
 {
@@ -38,8 +37,8 @@ function handleCommand()
 	} else if ($argv[1] == 'journal') {
 		// shows by default
 		$res = 'Timesheet below';
-	} else if ($argv[1] == 'timecard') {
-		$res = $adp->getTimecard();
+	} else if ($argv[1] == 'timesheet') {
+		$res = $adp->showTimesheet();
 	}
 
 	return $res;

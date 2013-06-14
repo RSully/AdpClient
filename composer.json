@@ -1,0 +1,22 @@
+{
+    "name": "rsully/adpclient",
+    "require": {
+        "jlogsdon/cli": "0.9.*"
+    },
+    "authors": [
+        {
+            "name": "Ryan",
+            "email": "rsul.dev@me.com"
+        }
+    ],
+    "autoload": {
+        "classmap": [
+            "include/",
+            "vendor_other/j4p5/"
+        ],
+        "files": [
+            "vendor/jlogsdon/cli/lib/cli/cli.php",
+            "include/AdpClient.function.php"
+        ]
+    }
+}

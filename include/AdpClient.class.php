@@ -1,7 +1,5 @@
 <?php
-require_once __DIR__ . '/AdpClient.function.php';
-require_once __DIR__ . '/simple_html_dom.php';
-require_once __DIR__ . '/j4p5/js.php';
+use \Walterra\J4p5Bundle\j4p5 as j4p5;
 
 class AdpClient {
 	private $endpoint = '';
@@ -191,9 +189,9 @@ class AdpClient {
 		return $entries;
 	}
 
-	private function fetchTimecardPage()
+	private function fetchTimesheetPage()
 	{
-		AdpClientLog('fetchTimecardPage');
+		AdpClientLog('fetchTimesheetPage');
 
 		$this->setupRequest(false, '/ezLaborManagerNet/iFrameRedir.aspx?pg=122');
 		$res = $this->fetchRequest();
@@ -204,10 +202,10 @@ class AdpClient {
 		}
 		return $res[1];
 	}
-	public function getTimecard($getHtml = false)
+	public function getTimesheet($getHtml = false)
 	{
 		// HTML lines with TCMS.oTD.push
-		$html = $this->fetchTimecardPage();
+		$html = $this->fetchTimesheetPage();
 		if ($getHtml || $html === false) {
 			return $html;
 		}
@@ -217,7 +215,7 @@ class AdpClient {
 		$addObj = function($input) use(&$objs) {
 			$objs[] = js_to_php_array($input);
 		};
-		js::define('external', array(
+		j4p5\js::define('external', array(
 			'addObj' => $addObj
 		));
 
@@ -230,7 +228,7 @@ class AdpClient {
 
 				$line = 'external.addObj' . $line . ';';
 				echo "Running JS:\n\t" . $line . "\n";
-				js::run($line);
+				j4p5\js::run($line);
 			}
 		}
 		
@@ -238,6 +236,33 @@ class AdpClient {
 			$a = is_string($a) ? urldecode($a) : $a;
 		});
 		return $objs;
+	}
+	public function showTimesheet()
+	{
+		$data = $this->getTimesheet();
+		print_r($data);
+		die;
+
+		$headers = array(
+			'Day',
+			'Date-in',
+			'Time-in',
+			'Time-out',
+			'Hours',
+			'Daily Total'
+		);
+		$rows = array();
+
+		foreach ($data as $d) {
+
+		}
+
+		$table = new \cli\Table();
+		$table->setHeaders($headers);
+		$table->setRows($rows);
+		$table->display();
+
+		return true;
 	}
 
 	/**

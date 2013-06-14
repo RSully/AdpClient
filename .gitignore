@@ -2,3 +2,5 @@
 cookies-tmp.dat
 tmp-data*
 capture*
+
+/vendor/

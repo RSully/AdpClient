@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/j4p5/jsrt.php';
 
 function AdpClientLog() {
 	$date = time();
