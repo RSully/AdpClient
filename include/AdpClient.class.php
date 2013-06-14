@@ -1,6 +1,4 @@
 <?php
-use \Walterra\J4p5Bundle\j4p5 as j4p5;
-
 class AdpClient {
 	private $endpoint = '';
 	private $ch = null;
@@ -215,7 +213,7 @@ class AdpClient {
 		$addObj = function($input) use(&$objs) {
 			$objs[] = js_to_php_array($input);
 		};
-		j4p5\js::define('external', array(
+		js::define('external', array(
 			'addObj' => $addObj
 		));
 
@@ -228,7 +226,7 @@ class AdpClient {
 
 				$line = 'external.addObj' . $line . ';';
 				echo "Running JS:\n\t" . $line . "\n";
-				j4p5\js::run($line);
+				js::run($line);
 			}
 		}
 		
