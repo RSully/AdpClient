@@ -43,3 +43,15 @@ function js_to_php_array($arr) {
 	}
 	return $newArr;
 }
+
+function dateinterval_to_seconds($di) {
+	return ($di->y * 365 * 24 * 60 * 60) + 
+           ($di->m * 30 * 24 * 60 * 60) + 
+           ($di->d * 24 * 60 * 60) + 
+           ($di->h * 60 * 60) + 
+           ($di->i * 60) + 
+           $di->s;
+}
+function dateinterval_to_hours($di) {
+	return dateinterval_to_seconds($di) / (60 * 60);
+}
