@@ -266,7 +266,6 @@ class AdpClient {
 	public function showTimesheet()
 	{
 		$data = $this->getTimesheet();
-		print_r($data);
 
 		$headers = array(
 			'Day',

@@ -45,8 +45,11 @@ function handleCommand()
 }
 
 handleInit();
+
 $data = handleCommand();
-var_dump($data);
+if ($data !== true) {
+	var_dump($data);
+}
 
 $adp->showActivityJournal();
 
