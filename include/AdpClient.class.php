@@ -146,9 +146,9 @@ class AdpClient {
 	 * Allows you to retreive punches for today
 	 */
 
-	public function fetchActivityJournal($strip = true)
+	public function fetchActivityJournalPage($strip = true)
 	{
-		AdpClientLog('fetchActivityJournal');
+		AdpClientLog('fetchActivityJournalPage');
 		$mytime = $this->cacheMytime();
 
 		$this->setupRequest(true, '/ezLaborManagerNet/UI4/Common/TLMRevitServices.asmx/GetActivityJournal');
@@ -169,14 +169,16 @@ class AdpClient {
 	}
 	public function getActivityJournal($getHtml = false)
 	{
-		$journal = $this->fetchActivityJournal();
+		$journal = $this->fetchActivityJournalPage();
 		if ($journal === false || $getHtml) {
 			return $journal;
 		}
 
 		// Parse the journal
 
-		$dom = str_get_html($journal);
+		$dom = new simple_html_dom();
+		$dom->load($journal);
+
 		$entries = array();
 
 		foreach ($dom->find('tr') as $row) {
@@ -185,6 +187,32 @@ class AdpClient {
 			$entries[] = array($action, $time);
 		}
 		return $entries;
+	}
+	public function showActivityJournal()
+	{
+		$data = $this->getActivityJournal();
+
+		$headers = array(
+			'Action',
+			'When'
+		);
+		$rows = array();
+
+		foreach ($data as $d) {
+			$d_time = new DateTime($d[1]);
+
+			$rows[] = array(
+				$d[0],
+				$d_time->format('m/d/Y h:i A')
+			);
+		}
+
+		$table = new \cli\Table();
+		$table->setHeaders($headers);
+		$table->setRows($rows);
+		$table->display();
+
+		return true;
 	}
 
 	private function fetchTimesheetPage()
@@ -225,7 +253,7 @@ class AdpClient {
 				$line = strip_tags($line); // Get rid of ending </script>
 
 				$line = 'external.addObj' . $line . ';';
-				echo "Running JS:\n\t" . $line . "\n";
+				// echo "Running JS:\n\t" . $line . "\n";
 				js::run($line);
 			}
 		}
@@ -239,7 +267,6 @@ class AdpClient {
 	{
 		$data = $this->getTimesheet();
 		print_r($data);
-		die;
 
 		$headers = array(
 			'Day',
@@ -252,7 +279,21 @@ class AdpClient {
 		$rows = array();
 
 		foreach ($data as $d) {
+			$d_date = new DateTime($d[7]);
+			$d_time_in = new DateTime($d[8][0] . ' ' . $d[8][1]);
+			$d_time_out = null;
+			if (!empty($d[10])) {
+				$d_time_out = new DateTime($d[8][0] . ' ' . $d[10]);
+			}
 
+			$rows[] = array(
+				$d_date->format('D'),
+				$d_date->format('m/d/Y'),
+				$d_time_in->format('h:i A'),
+				$d_time_out ? $d_time_out->format('h:i A') : '',
+				'TODO',
+				'TODO'
+			);
 		}
 
 		$table = new \cli\Table();

@@ -48,9 +48,7 @@ handleInit();
 $data = handleCommand();
 var_dump($data);
 
-$data = $adp->getActivityJournal();
-print_r($data);
-
+$adp->showActivityJournal();
 
 // Example call
 // $data = $adp->sendClock('OUT');
