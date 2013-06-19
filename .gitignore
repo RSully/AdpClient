@@ -3,4 +3,6 @@ cookies-tmp.dat
 tmp-data*
 capture*
 
+main-auth-mine
+
 /vendor/
