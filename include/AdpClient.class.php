@@ -14,7 +14,9 @@ class AdpClient {
 			CURLOPT_RETURNTRANSFER => 1,
 			CURLOPT_AUTOREFERER => true,
 			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_COOKIESESSION => true
+			CURLOPT_COOKIESESSION => true,
+			CURLOPT_COOKIEFILE => '/dev/null'
+			// CURLOPT_COOKIEJAR => '/dev/null'
 			// CURLOPT_COOKIEFILE => $data_dir . '/cookies-tmp.dat',
 			// CURLOPT_COOKIEJAR => $data_dir . '/cookies-tmp.dat'
 			// CURLOPT_VERBOSE => true
