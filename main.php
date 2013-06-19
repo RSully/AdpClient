@@ -27,6 +27,9 @@ $args->addFlag(array('adp-journal'), 'Show ADP journal');
 $args->addFlag(array('adp-clock-in'), 'Clock-in');
 $args->addFlag(array('adp-clock-out'), 'Clock-out');
 
+$args->addOption(array('at-date-begin'), '--adp-timesheet date begin');
+$args->addOption(array('at-date-end'), '--adp-timesheet date end');
+
 /**
  * Parse arguments
  */
@@ -88,7 +91,16 @@ if ($args['proxy']) {
 $adp = new AdpClient($user, $pass, $options);
 
 if ($args['adp-timesheet']) {
-	$adp->showTimesheet(new DateTime('Monday this week'));
+	$timesheet_date_begin = new DateTime('Monday this week');
+	$timesheet_date_end = null;
+
+	if ($args['at-date-begin']) {
+		$timesheet_date_begin = new DateTime($args['at-date-begin']);
+		if ($args['at-date-end']) {
+			$timesheet_date_end = new DateTime($args['at-date-end']);
+		}
+	}
+	$adp->showTimesheet($timesheet_date_begin, $timesheet_date_end);
 }
 
 if ($args['adp-clock-in']) {
