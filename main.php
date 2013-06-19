@@ -15,9 +15,10 @@ $args = new \cli\Arguments();
 
 $args->addFlag(array('help', 'h'), 'Show this help screen');
 
-$args->addOption(array('authfile', 'a'), 'Path to authentication file');
-$args->addOption(array('username', 'u'), 'Username (not required if authfile used)');
-$args->addOption(array('password', 'p'), 'Password (not required if authfile used)');
+$args->addOption(array('configfile', 'c'), 'Path to config file');
+
+$args->addOption(array('username', 'u'), 'Username');
+$args->addOption(array('password', 'p'), 'Password');
 
 $args->addOption(array('proxy'), 'SOCKS5 proxy');
 
@@ -36,8 +37,8 @@ $args->parse();
  * Load extra options from authfile
  */
 
-if (isset($args['authfile'])) {
-	$authfile = json_decode(file_get_contents($args['authfile']), true);
+if (isset($args['configfile'])) {
+	$authfile = json_decode(file_get_contents($args['configfile']), true);
 	foreach ($authfile as $k => $v) {
 		if (!isset($args[$k])) {
 			$args[$k] = $v;
@@ -50,7 +51,7 @@ if (isset($args['authfile'])) {
  */
 
 $required = array(
-	'authfile|username,password',
+	'username,password',
 	'adp-timesheet|adp-journal|adp-clock-in|adp-clock-out'
 );
 
