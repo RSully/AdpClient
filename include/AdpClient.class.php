@@ -146,7 +146,7 @@ class AdpClient {
 	 * Allows you to retreive punches for today
 	 */
 
-	public function fetchActivityJournalPage($strip = true)
+	public function fetchActivityJournalPage()
 	{
 		AdpClientLog('fetchActivityJournalPage');
 		$mytime = $this->cacheMytime();
@@ -157,14 +157,13 @@ class AdpClient {
 		$res = $this->fetchRequest();
 
 		// Get data with the right element/etc
-		if (!isset($res[1])) {
+		if (!isset($res[1]) || strpos($res[1], 'System Error') !== false) {
 			return false;
 		}
 		$data = json_decode($res[1], true);
 		if ($data === false || !isset($data['d'])) {
 			return false;
 		}
-
 		return utf8_decode($data['d']);
 	}
 	public function getActivityJournal($getHtml = false)
@@ -191,6 +190,7 @@ class AdpClient {
 	public function showActivityJournal()
 	{
 		$data = $this->getActivityJournal();
+		if (!$data) return false;
 
 		$headers = array(
 			'Action',
@@ -215,23 +215,54 @@ class AdpClient {
 		return true;
 	}
 
-	private function fetchTimesheetPage()
+	private function fetchTimesheetPage(DateTime $date_begin = null, DateTime $date_end = null)
 	{
 		AdpClientLog('fetchTimesheetPage');
 
+		$date_cli = true;
+		if (!$date_begin) {
+			$date_cli = false;
+			$date_begin = new DateTime('Monday this week');
+		}
+		if (!$date_end) {
+			$date_end = clone $date_begin;
+			$date_end->add(DateInterval::createFromDateString('1 week'));
+		}
+
+		var_dump($date_cli, $date_begin, $date_end);
+
+		// Load initial page
 		$this->setupRequest(false, '/ezLaborManagerNet/iFrameRedir.aspx?pg=122');
 		$res = $this->fetchRequest();
 
+		if ($date_cli) {
+			$res_get = $res;
+			$res_form = static::serializeForm($res_get[1], '#form1');
+			$res = null;
+
+			// Then load with correct date
+			// /ezLaborManagerNet/UI4/Standard/EmployeeServices/TimeEntry/EmployeeTimeSheet.aspx
+			$this->setupRequest(true, $res_form['action']);
+
+			$this->setPostData(array_merge($res_form['fields'], array(
+				'UI4:ctBody:ctrlDtRangeSelector:seldaterange' => 'UserDefined',
+				'UI4:ctBody:ctrlDtRangeSelector:BeginDate' => $date_begin->format('Y-m-d'),
+				'UI4:ctBody:ctrlDtRangeSelector:EndDate' => $date_end->format('Y-m-d')
+			)), false);
+
+			$res = $this->fetchRequest();
+		}
+
 		// Get data with the right element/etc
-		if (!isset($res[1])) {
+		if (!isset($res[1]) || strpos($res[1], 'System Error') !== false) {
 			return false;
 		}
 		return $res[1];
 	}
-	public function getTimesheet($getHtml = false)
+	public function getTimesheet($getHtml = false, DateTime $date_begin = null, DateTime $date_end = null)
 	{
 		// HTML lines with TCMS.oTD.push
-		$html = $this->fetchTimesheetPage();
+		$html = $this->fetchTimesheetPage($date_begin, $date_end);
 		if ($getHtml || $html === false) {
 			return $html;
 		}
@@ -253,6 +284,7 @@ class AdpClient {
 				$line = strip_tags($line); // Get rid of ending </script>
 
 				$line = 'external.addObj' . $line . ';';
+
 				// echo "Running JS:\n\t" . $line . "\n";
 				js::run($line);
 			}
@@ -263,9 +295,10 @@ class AdpClient {
 		});
 		return $objs;
 	}
-	public function showTimesheet()
+	public function showTimesheet(DateTime $date_begin = null, DateTime $date_end = null)
 	{
-		$data = $this->getTimesheet();
+		$data = $this->getTimesheet(false, $date_begin, $date_end);
+		if (!$data) return false;
 
 		$headers = array(
 			'Day',
@@ -280,6 +313,28 @@ class AdpClient {
 
 		$total_seconds = 0;
 		$daily_seconds = array();
+
+		/**
+		 * https://workforcenow.adp.com/ezLaborManagerNet/UI4/js/TimecardManagerTable.js?20.10.28.004
+		 * 
+		 * Column listing
+		 * 
+		 * ObjectID: 0,
+		 * Errors: 1,
+		 * IsNew: 2,
+		 * IsUpdate: 3,
+		 * IsDelete: 4,
+		 * SupvApprovalFlag: 5,
+		 * LoanApprovalFlag: 6,
+		 * PayDate: 7,
+		 * PunchOrInTime: 8,
+		 * InType: 9,
+		 * OutTime: 10,
+		 * TotalHours: 11,
+		 * OutType: 12,
+		 * DepartmentID: 13,
+		 * EmployeeID: 14,
+		 */
 
 		foreach ($data as $d) {
 			$d_date = new DateTime($d[7]);
@@ -358,5 +413,22 @@ class AdpClient {
 			'OUT' => 'Clock-out'
 			// 'LUNCH' => 'Lunch'
 		);
+	}
+
+	public static function serializeForm($html, $ident)
+	{
+		$dom = new simple_html_dom();
+		$dom->load($html);
+
+		$form = $dom->find($ident, 0);
+
+		$retForm = array('action' => '', 'fields' => array());
+
+		$retForm['action'] = html_entity_decode($form->action);
+
+		foreach ($form->find('input') as $input) {
+			$retForm['fields'][$input->name] = html_entity_decode($input->value);
+		}
+		return $retForm;
 	}
 }

@@ -38,7 +38,14 @@ function handleCommand()
 		// shows by default
 		$res = 'Timesheet below';
 	} else if ($argv[1] == 'timesheet') {
-		$res = $adp->showTimesheet();
+		$date_begin = null; $date_end = null;
+		if (isset($argv[2])) {
+			$date_begin = new DateTime($argv[2]);
+			if (isset($argv[3])) {
+				$date_end = new DateTime($argv[3]);
+			}
+		}
+		$res = $adp->showTimesheet($date_begin, $date_end);
 	}
 
 	return $res;
