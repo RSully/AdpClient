@@ -18,7 +18,7 @@ To use the example CLI:
 Examples:
 
 ```
-php test.php timesheet
+php test.php timesheet [begin date] [end date]
 php test.php clock in
 php test.php clock out
 ```

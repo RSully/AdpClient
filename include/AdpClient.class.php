@@ -229,8 +229,6 @@ class AdpClient {
 			$date_end->add(DateInterval::createFromDateString('1 week'));
 		}
 
-		var_dump($date_cli, $date_begin, $date_end);
-
 		// Load initial page
 		$this->setupRequest(false, '/ezLaborManagerNet/iFrameRedir.aspx?pg=122');
 		$res = $this->fetchRequest();
