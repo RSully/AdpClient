@@ -10,16 +10,18 @@ class AdpClient {
 		$this->ch = curl_init();
 		curl_setopt_array($this->ch, $extraOpts);
 		curl_setopt_array($this->ch, array(
-			CURLOPT_URL, $this->endpoint,
+			CURLOPT_URL => $this->endpoint,
 			CURLOPT_RETURNTRANSFER => 1,
 			CURLOPT_AUTOREFERER => true,
-			CURLOPT_FOLLOWLOCATION => true,
+			// CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_COOKIESESSION => true,
-			CURLOPT_COOKIEFILE => '/dev/null'
+			CURLOPT_COOKIEFILE => '/dev/null',
 			// CURLOPT_COOKIEJAR => '/dev/null'
 			// CURLOPT_COOKIEFILE => $data_dir . '/cookies-tmp.dat',
 			// CURLOPT_COOKIEJAR => $data_dir . '/cookies-tmp.dat'
-			// CURLOPT_VERBOSE => true
+			// CURLOPT_VERBOSE => true,
+			CURLOPT_TIMEOUT => 10,
+			CURLOPT_CONNECTTIMEOUT => 10
 		));
 		curl_setopt($this->ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36");
 
@@ -78,6 +80,9 @@ class AdpClient {
 	{
 		$response = curl_exec($this->ch);
 		$info = curl_getinfo($this->ch);
+		if ($response === false) {
+			AdpClientLog('curl failure: ' . curl_error($this->ch));
+		}
 		return array($info, $response);
 	}
 
@@ -131,15 +136,13 @@ class AdpClient {
 			$findRes[] = trim(substr($resData, $pos, $end), $this->getTrimJsChars("';"));
 		}
 
-		$this->cachedExtra = array(
+		return $this->cachedExtra = array(
 			'res' => $res,
 			'extra' => array(
 				'sEmployeeID' => $findRes[1],
 				'iCustID' => $findRes[0]
 			)
 		);
-
-		return $this->cachedExtra;
 	}
 
 	/**
@@ -162,6 +165,7 @@ class AdpClient {
 		if (!isset($res[1]) || strpos($res[1], 'System Error') !== false) {
 			return false;
 		}
+
 		$data = json_decode($res[1], true);
 		if ($data === false || !isset($data['d'])) {
 			return false;
@@ -236,6 +240,8 @@ class AdpClient {
 		$res = $this->fetchRequest();
 
 		if ($date_cli) {
+			AdpClientLog('fetchTimesheetPage POST');
+			
 			$res_get = $res;
 			$res_form = static::serializeForm($res_get[1], '#form1');
 			$res = null;
