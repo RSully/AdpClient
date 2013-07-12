@@ -13,7 +13,7 @@ class AdpClient {
 			CURLOPT_URL => $this->endpoint,
 			CURLOPT_RETURNTRANSFER => 1,
 			CURLOPT_AUTOREFERER => true,
-			CURLOPT_FOLLOWLOCATION => true,
+			// CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_COOKIESESSION => true,
 			CURLOPT_COOKIEFILE => '/dev/null',
 			// CURLOPT_COOKIEJAR => '/dev/null',
@@ -74,7 +74,7 @@ class AdpClient {
 		$response = curl_exec($this->ch);
 		$info = curl_getinfo($this->ch);
 		if ($response === false) {
-			AdpClientLog('curl failure: ' . curl_error($this->ch));
+			AdpClientLog('curl failure: ' . curl_error($this->ch) . ' - ' . print_r($info, true));
 		}
 		return array($info, $response);
 	}
@@ -234,6 +234,9 @@ class AdpClient {
 		// Load initial page
 		$this->setupRequest(false, '/ezLaborManagerNet/iFrameRedir.aspx?pg=122');
 		$res = $this->fetchRequest();
+		if (static::responseContainsError($res)) {
+			return false;
+		}
 
 		if ($date_cli) {
 			AdpClientLog('fetchTimesheetPage POST');
@@ -253,11 +256,9 @@ class AdpClient {
 			)), false);
 
 			$res = $this->fetchRequest();
-		}
-
-		// Get data with the right element/etc
-		if (static::responseContainsError($res)) {
-			return false;
+			if (static::responseContainsError($res)) {
+				return false;
+			}
 		}
 		return $res[1];
 	}
@@ -426,6 +427,7 @@ class AdpClient {
 		$dom->load($html);
 
 		$form = $dom->find($ident, 0);
+		if (!$form) return false;
 
 		$retForm = array(
 			'action' => html_entity_decode($form->action),
@@ -442,7 +444,8 @@ class AdpClient {
 		return (
 			$res[1] === false ||
 			$res[0]['http_code'] != 200 ||
-			strpos($res[1], 'System Error') !== false
+			strpos($res[1], 'System Error') !== false ||
+			strpos($res[0]['redirect_url'], 'Error.aspx') !== false
 		);
 	}
 
