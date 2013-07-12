@@ -40,11 +40,6 @@ class AdpClient {
 			'Origin: ' . $this->endpoint
 		), $headers);
 	}
-	private function getTrimJsChars($extra = '')
-	{
-		// Besides the default we need `'` and `;`
-		return " \t\n\r\0\x0B" . $extra;
-	}
 
 	/**
 	 * Helpers for dealing with cURL
@@ -136,7 +131,7 @@ class AdpClient {
 		foreach ($find as $findme) {
 			$pos = strpos($resData, $findme) + strlen($findme);
 			$end = strpos($resData, "\n", $pos) - $pos;
-			$findRes[] = trim(substr($resData, $pos, $end), $this->getTrimJsChars("';"));
+			$findRes[] = trim(substr($resData, $pos, $end), static::getTrimJsChars("';"));
 		}
 
 		return $this->cachedExtra = array(
@@ -163,9 +158,7 @@ class AdpClient {
 		$this->setPostData($mytime['extra'], true);
 
 		$res = $this->fetchRequest();
-
-		// Get data with the right element/etc
-		if (!isset($res[1]) || strpos($res[1], 'System Error') !== false) {
+		if (static::responseContainsError($res)) {
 			return false;
 		}
 
@@ -453,5 +446,11 @@ class AdpClient {
 			$res[1] === false || 
 			strpos($res[1], 'System Error') !== false
 		);
+	}
+
+	static private function getTrimJsChars($extra = '')
+	{
+		// Besides the default we need `'` and `;`
+		return " \t\n\r\0\x0B" . $extra;
 	}
 }
