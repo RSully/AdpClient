@@ -447,7 +447,7 @@ class AdpClient {
 
 	public static function responseContainsError($res) {
 		return (
-			$res[0]['http_code'] !== 200 ||
+			$res[0]['http_code'] != 200 ||
 			!isset($res[1]) || 
 			$res[1] === false || 
 			strpos($res[1], 'System Error') !== false
