@@ -13,12 +13,10 @@ class AdpClient {
 			CURLOPT_URL => $this->endpoint,
 			CURLOPT_RETURNTRANSFER => 1,
 			CURLOPT_AUTOREFERER => true,
-			// CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_COOKIESESSION => true,
 			CURLOPT_COOKIEFILE => '/dev/null',
-			// CURLOPT_COOKIEJAR => '/dev/null'
-			// CURLOPT_COOKIEFILE => $data_dir . '/cookies-tmp.dat',
-			// CURLOPT_COOKIEJAR => $data_dir . '/cookies-tmp.dat'
+			// CURLOPT_COOKIEJAR => '/dev/null',
 			// CURLOPT_VERBOSE => true,
 			CURLOPT_TIMEOUT => 10,
 			CURLOPT_CONNECTTIMEOUT => 10
@@ -104,6 +102,7 @@ class AdpClient {
 		), false);
 
 		$res = $this->fetchRequest();
+		return !static::responseContainsError($res);
 	}
 
 	/**
@@ -125,7 +124,11 @@ class AdpClient {
 
 		$this->setupRequest(true, '/ezLaborManagerNet/UI4/WFN/Portlet/MyTime.aspx');
 		$res = $this->fetchRequest();
-		
+
+		if (static::responseContainsError($res)) {
+			return false;
+		}
+
 		// We need to parse out _custID and _empID
 		$find = array('custID = ', 'empID = ');
 		$findRes = array();
@@ -260,7 +263,7 @@ class AdpClient {
 		}
 
 		// Get data with the right element/etc
-		if (!isset($res[1]) || strpos($res[1], 'System Error') !== false) {
+		if (static::responseContainsError($res)) {
 			return false;
 		}
 		return $res[1];
@@ -404,7 +407,10 @@ class AdpClient {
 		$data_pipe = explode('|', $data);
 		$success = strtolower(array_shift($data_pipe)) == 'true';
 
-		return array($success, utf8_decode(implode('|', $data_pipe)));
+		return array(
+			$success,
+			utf8_decode(implode('|', $data_pipe))
+		);
 	}
 
 	/**
@@ -428,13 +434,23 @@ class AdpClient {
 
 		$form = $dom->find($ident, 0);
 
-		$retForm = array('action' => '', 'fields' => array());
-
-		$retForm['action'] = html_entity_decode($form->action);
+		$retForm = array(
+			'action' => html_entity_decode($form->action),
+			'fields' => array()
+		);
 
 		foreach ($form->find('input') as $input) {
 			$retForm['fields'][$input->name] = html_entity_decode($input->value);
 		}
 		return $retForm;
+	}
+
+	public static function responseContainsError($res) {
+		return (
+			$res[0]['http_code'] !== 200 ||
+			!isset($res[1]) || 
+			$res[1] === false || 
+			strpos($res[1], 'System Error') !== false
+		);
 	}
 }
