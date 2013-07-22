@@ -121,6 +121,7 @@ class AdpClient {
 		$res = $this->fetchRequest();
 
 		if (static::responseContainsError($res)) {
+			AdpClientLog('cacheMytime contained error');
 			return false;
 		}
 
@@ -153,6 +154,9 @@ class AdpClient {
 	{
 		AdpClientLog('fetchActivityJournalPage');
 		$mytime = $this->cacheMytime();
+		if (!$mytime) {
+			return false;
+		}
 
 		$this->setupRequest(true, '/ezLaborManagerNet/UI4/Common/TLMRevitServices.asmx/GetActivityJournal');
 		$this->setPostData($mytime['extra'], true);
@@ -388,6 +392,9 @@ class AdpClient {
 	{
 		AdpClientLog('sendClock %s', $action);
 		$mytime = $this->cacheMytime();
+		if (!$mytime) {
+			return false;
+		}
 
 		$this->setupRequest(true, '/ezLaborManagerNet/UI4/Common/TLMRevitServices.asmx/ProcessClockFunctionAndReturnMsg');
 		$this->setPostData(array_merge($mytime['extra'], array(
