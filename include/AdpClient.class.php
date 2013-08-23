@@ -278,6 +278,11 @@ class AdpClient {
 			$date_range_begin = $date_range_orig[0];
 			$date_range_end = $date_range_orig[1];
 
+			if ($date_range_begin === null || $date_range_end === null)
+			{
+				continue;
+			}
+
 			$diff = $date_range_end->diff($date_range_begin);
 			$days = ceil($diff->format('%a'));
 
