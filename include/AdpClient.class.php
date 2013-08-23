@@ -423,7 +423,7 @@ class AdpClient {
 
 		foreach ($data as $d) {
 			$d_date = new DateTime($d[7]);
-			$d_date_dow = $d_date->format('D');
+			$d_date_unique = $d_date->format('Y-m-d');
 
 			$d_time_in = new DateTime($d[8][0] . ' ' . $d[8][1]);
 			$d_time_out = null;
@@ -435,10 +435,10 @@ class AdpClient {
 			$d_timeinout_diff = $d_time_in->diff($d_time_out ?: new DateTime);
 			$d_timeinout_diff_seconds = dateinterval_to_seconds($d_timeinout_diff);
 
-			if (!isset($daily_seconds[$d_date_dow])) {
-				$daily_seconds[$d_date_dow] = 0;
+			if (!isset($daily_seconds[$d_date_unique])) {
+				$daily_seconds[$d_date_unique] = 0;
 			}
-			$daily_seconds[$d_date_dow] += $d_timeinout_diff_seconds;
+			$daily_seconds[$d_date_unique] += $d_timeinout_diff_seconds;
 			$total_seconds += $d_timeinout_diff_seconds;
 
 			$rows[] = array(
@@ -447,7 +447,7 @@ class AdpClient {
 				$d_time_in->format('h:i A'),
 				$d_time_out ? $d_time_out->format('h:i A') : '(now)',
 				$d_timeinout_diff ? sprintf('%.02f', $d_timeinout_diff_seconds / (60 * 60)) : '',
-				sprintf('%.02f', $daily_seconds[$d_date_dow] / (60 * 60)),
+				sprintf('%.02f', $daily_seconds[$d_date_unique] / (60 * 60)),
 				sprintf('%.02f', $total_seconds / (60 * 60))
 			);
 		}
