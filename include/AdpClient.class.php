@@ -122,6 +122,7 @@ class AdpClient {
 
 		if (static::responseContainsError($res)) {
 			AdpClientLog('cacheMytime contained error');
+			var_dump($res);
 			return false;
 		}
 
@@ -226,11 +227,11 @@ class AdpClient {
 		AdpClientLog('fetchTimesheetPage');
 
 		$date_cli = true;
-		if (!$date_begin) {
+		if ($date_begin === null) {
 			$date_cli = false;
 			$date_begin = new DateTime('Monday this week');
 		}
-		if (!$date_end) {
+		if ($date_end === null) {
 			$date_end = clone $date_begin;
 			$date_end->add(DateInterval::createFromDateString('1 week'));
 		}
@@ -266,12 +267,78 @@ class AdpClient {
 		}
 		return $res[1];
 	}
-	public function getTimesheet($getHtml = false, DateTime $date_begin = null, DateTime $date_end = null)
+	public function getTimesheet($getHtml = false, array $date_ranges_orig)
 	{
-		// HTML lines with TCMS.oTD.push
-		$html = $this->fetchTimesheetPage($date_begin, $date_end);
-		if ($getHtml || $html === false) {
-			return $html;
+		// Split up the date ranges into slots of 30 days
+		$date_ranges = array();
+		for ($i = 0; $i < count($date_ranges_orig); $i++)
+		{
+			$date_range_orig = $date_ranges_orig[$i];
+
+			$date_range_begin = $date_range_orig[0];
+			$date_range_end = $date_range_orig[1];
+
+			$diff = $date_range_end->diff($date_range_begin);
+			$days = ceil($diff->format('%a'));
+
+			if ($days < 0)
+			{
+				continue;
+			}
+			if ($days <= 30)
+			{
+				$date_ranges[] = $date_range_orig;
+				continue;
+			}
+
+			/**
+			 * Setup for adding ranges
+			 */
+
+			$day_interval = 30;
+
+			$date_interval = DateInterval::createFromDateString('30 days');
+			$date_interval_1d = DateInterval::createFromDateString('1 day');
+			$days_extra = $days % 30;
+			$date_interval_extra = DateInterval::createFromDateString(sprintf('%d days', $days_extra));
+
+			$date_a = null;
+			$date_b = clone $date_range_begin;
+
+			/**
+			 * Add ranges for 30-day intervals
+			 */
+
+			for ($d = 0; $d < floor($days / 30); $d++)
+			{
+				$date_a = clone $date_b;
+				$date_b = clone $date_a;
+
+				if ($d > 0)
+				{
+					$date_a->add($date_interval_1d);
+				}
+				$date_b->add($date_interval);
+
+				$date_ranges[] = array($date_a, $date_b);
+			}
+
+			/**
+			 * Add interval for extra days
+			 */
+
+			$date_a = clone $date_b;
+			$date_b = clone $date_a;
+			$date_a->add($date_interval_1d);
+			$date_b->add($date_interval_extra);
+			$date_ranges[] = array($date_a, $date_b);
+		}
+
+		// print_r($date_ranges); die;
+
+		if (count($date_ranges) < 1)
+		{
+			$date_ranges[] = array(null, null);
 		}
 
 		// We're going to be parsing the JS
@@ -284,17 +351,28 @@ class AdpClient {
 		));
 
 
-		foreach (explode("\n", $html) as $line) {
-			$line = trim($line);
-			if (has_prefix('TCMS.oTD.push', $line)) {
-				$line = str_replace('TCMS.oTD.push', '', $line); // Get rid of function call
-				$line = strip_tags($line); // Get rid of ending </script>
-
-				$line = 'external.addObj' . $line . ';';
-
-				// echo "Running JS:\n\t" . $line . "\n";
-				js::run($line);
+		foreach ($date_ranges as $date_range)
+		{
+			$html = $this->fetchTimesheetPage($date_range[0], $date_range[1]);
+			if ($getHtml || $html === false) {
+				return $html;
 			}
+
+			foreach (explode("\n", $html) as $line) {
+				$line = trim($line);
+	
+				// HTML lines with TCMS.oTD.push
+				if (has_prefix('TCMS.oTD.push', $line)) {
+					$line = str_replace('TCMS.oTD.push', '', $line); // Get rid of function call
+					$line = strip_tags($line); // Get rid of ending </script>
+
+					$line = 'external.addObj' . $line . ';';
+
+					// echo "Running JS:\n\t" . $line . "\n";
+					js::run($line);
+				}
+			}
+
 		}
 		
 		array_walk_recursive($objs, function(&$a){
@@ -304,7 +382,7 @@ class AdpClient {
 	}
 	public function showTimesheet(DateTime $date_begin = null, DateTime $date_end = null)
 	{
-		$data = $this->getTimesheet(false, $date_begin, $date_end);
+		$data = $this->getTimesheet(false, array(array($date_begin, $date_end)));
 		if (!$data) return false;
 
 		$headers = array(
