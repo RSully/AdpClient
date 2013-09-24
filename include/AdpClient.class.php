@@ -228,7 +228,7 @@ class AdpClient {
 
 		$date_cli = true;
 		if ($date_begin === null) {
-			$date_cli = false;
+			// $date_cli = false;
 			$date_begin = new DateTime('Monday this week');
 		}
 		if ($date_end === null) {
@@ -240,6 +240,8 @@ class AdpClient {
 		$this->setupRequest(false, '/ezLaborManagerNet/iFrameRedir.aspx?pg=122');
 		$res = $this->fetchRequest();
 		if (static::responseContainsError($res)) {
+			var_dump($res);
+			AdpClientLog('fetchTimesheetPage returned error');
 			return false;
 		}
 
