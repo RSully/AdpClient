@@ -233,7 +233,7 @@ class AdpClient {
 		}
 		if ($date_end === null) {
 			$date_end = clone $date_begin;
-			$date_end->add(DateInterval::createFromDateString('1 week'));
+			$date_end->add(DateInterval::createFromDateString('6 days'));
 		}
 
 		// Load initial page
